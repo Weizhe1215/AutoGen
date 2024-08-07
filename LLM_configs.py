@@ -60,7 +60,6 @@ Qwen_strong_llm_config = {
             "price": [0.00004, 0.00012],
             "cache_seed": None,
         }],
-    "temperature": 0.5,
-    "max_tokens": 2000,
+    "temperature": 0.1,
     "timeout": 300
 }

@@ -4,7 +4,7 @@ from autogen import ConversableAgent
 def extraction_assistant(llm_config):
     agent = ConversableAgent(
         name="信息提取员",
-        system_message="你是一个信息提取员，任务是将我需要的信息，从我给你的一大段文字中提取出来，并返回给我",
+        system_message="你是一个信息提取员，任务是将我需要的信息，从我给你的一大段文字中提取出来，并返回给我。返回重要的信息，不要过于亢长，但不能有细节缺失",
         llm_config=llm_config
     )
     return agent
