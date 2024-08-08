@@ -18,3 +18,11 @@ def integrate_assistant(llm_config, requirements):
     )
     return agent
 
+
+def report_modify(llm_config):
+    agent = ConversableAgent(
+        name="报告修改员",
+        system_message="你是一个报告修改员，需要根据我的要求，去修改我的报告字段内容，严格按照我的要求修改，我没有提到的地方一个字都不能动",
+        llm_config=llm_config
+    )
+    return agent
