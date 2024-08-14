@@ -1,5 +1,19 @@
 from docx import Document
 import Agents as Ag
+from typing import *
+import httpx
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
+
+# 读取 环境中的 kimi api key并创建 client
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.environ.get("Kimi_API_KEY"),
+    base_url="https://api.moonshot.cn/v1",
+)
+
 
 
 # 读取 docx文件的函数
@@ -11,6 +25,40 @@ def file_extraction(file):
     for para in document.paragraphs:
         file_content += para.text + "\n"
     return file_content
+
+
+def upload_and_cache_file(text: str, cache_tag: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    将文本内容上传并缓存。
+    """
+    messages = [{"role": "system", "content": text}]
+
+    if cache_tag:
+        r = httpx.post(f"{client.base_url}/caching",
+                       headers={
+                           "Authorization": f"Bearer {client.api_key}",
+                       },
+                       json={
+                           "model": "moonshot-v1",
+                           "messages": messages,
+                           "ttl": 300,
+                           "tags": [cache_tag],
+                       })
+
+        if r.status_code != 200:
+            raise Exception(r.text)
+
+        return [{
+            "role": "cache",
+            "content": f"tag={cache_tag};reset_ttl=300",
+        }]
+    else:
+        return messages
+
+
+
+
+
 
 
 # 撰写报告的函数
