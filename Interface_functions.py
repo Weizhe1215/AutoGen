@@ -18,10 +18,10 @@ client = OpenAI(
 # 标准的 openai 格式回复
 def open_ai_generate_reply(messages, llm_config):
     response = client.chat.completions.create(
-        model=llm_config["model"],  # 使用弱配置的模型
+        model=llm_config['config_list'][0]['model'],  # 使用弱配置的模型
         messages=messages
     )
-    return response.choices[0].message["content"]
+    return response.choices[0].message.content
 
 
 # 读取 docx文件的函数
@@ -69,16 +69,19 @@ def report_writing(text, old_report_part, weak_config, strong_config, prompts, c
     cache_tag = "quant_cache"  # 为缓存设置一个唯一标识
     file_messages = upload_and_cache_file(text, cache_tag)
 
-    extraction_agent = Ag.extraction_assistant(weak_config)
+    # extraction_agent = Ag.extraction_assistant(weak_config)
     integrate_agent = Ag.integrate_assistant(strong_config, requirements)
 
     for prompt, component in zip(prompts, list(component_dict.keys())):
         messages = [
             *file_messages,
+            {"role":"system", "content": "你是一个信息提取员，任务是将我需要的信息，从我给你的一大段文字中提取出来，并返回给我。返回重要"
+                                         "的信息，不要过于亢长，但不能有细节缺失"},
             {"content": prompt, "role": "user"}
         ]
+        reply = open_ai_generate_reply(messages,weak_config)
         print(messages)
-        reply = extraction_agent.generate_reply(messages=messages)
+        # reply = extraction_agent.generate_reply(messages=messages)
         component_dict[component].append(reply)
 
     final_report = integrate_agent.generate_reply(messages=[{"content": str(component_dict), "role": "system"},
