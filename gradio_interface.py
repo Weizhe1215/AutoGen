@@ -4,7 +4,6 @@ from tools import *
 from Interface_functions import *
 
 import gradio as gr
-from docx import Document
 
 quant_dict = {
     'quant_idea': [],
@@ -45,7 +44,7 @@ with gr.Blocks() as demo:
                 # 调用 report_writing 函数
                 final_report, draft_report, component_dic, cost_list = report_writing(
                     text, old_report_part,
-                    LLM_configs.Qwen_weak_llm_config,
+                    LLM_configs.kimi_weak_llm_config,
                     LLM_configs.kimi_strong_llm_config,
                     Prompt_dics.Strategy_prompt_dic['Simple Quant Strategy'],
                     quant_dict,
