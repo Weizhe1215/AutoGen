@@ -15,6 +15,14 @@ client = OpenAI(
 )
 
 
+# 标准的 openai 格式回复
+def open_ai_generate_reply(messages, llm_config):
+    response = client.chat.completions.create(
+        model=llm_config["model"],  # 使用弱配置的模型
+        messages=messages
+    )
+    return response.choices[0].message["content"]
+
 
 # 读取 docx文件的函数
 def file_extraction(file):
@@ -34,14 +42,14 @@ def upload_and_cache_file(text: str, cache_tag: Optional[str] = None) -> List[Di
     messages = [{"role": "system", "content": text}]
 
     if cache_tag:
-        r = httpx.post(f"{client.base_url}/caching",
+        r = httpx.post(f"{client.base_url}caching",
                        headers={
                            "Authorization": f"Bearer {client.api_key}",
                        },
                        json={
                            "model": "moonshot-v1",
                            "messages": messages,
-                           "ttl": 300,
+                           "ttl": 100,
                            "tags": [cache_tag],
                        })
 
@@ -56,19 +64,21 @@ def upload_and_cache_file(text: str, cache_tag: Optional[str] = None) -> List[Di
         return messages
 
 
-
-
-
-
-
 # 撰写报告的函数
 def report_writing(text, old_report_part, weak_config, strong_config, prompts, component_dict, requirements, updating):
+    cache_tag = "quant_cache"  # 为缓存设置一个唯一标识
+    file_messages = upload_and_cache_file(text, cache_tag)
+
     extraction_agent = Ag.extraction_assistant(weak_config)
     integrate_agent = Ag.integrate_assistant(strong_config, requirements)
 
     for prompt, component in zip(prompts, list(component_dict.keys())):
-        reply = extraction_agent.generate_reply(messages=[{"content": text, "role": "system"},
-                                                          {"content": prompt, "role": "user"}])
+        messages = [
+            *file_messages,
+            {"content": prompt, "role": "user"}
+        ]
+        print(messages)
+        reply = extraction_agent.generate_reply(messages=messages)
         component_dict[component].append(reply)
 
     final_report = integrate_agent.generate_reply(messages=[{"content": str(component_dict), "role": "system"},
@@ -101,5 +111,3 @@ def report_rewrite(feedback, report, config):
                   {"content": "这是报告:" + report, "role": "system"},
                   {"content": "按照要求，对报告进行修改", "role": "user"}])
     return new_report
-
-
